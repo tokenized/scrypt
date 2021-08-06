@@ -1,0 +1,5 @@
+
+out/*.json
+deployments/fixture/autoGen/*.json
+
+node_modules

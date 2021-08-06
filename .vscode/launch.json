@@ -1,0 +1,22 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "scrypt",
+            "request": "launch",
+            "name": "sCrypt: Debug Contract",
+            "program": "${workspaceFolder}/contracts/enforce_output.scrypt",
+            "constructorArgs": ["b'76a9140f68389668c7e680d62e2446866ea1ca668e7fa188ac'",2000],
+            "pubFunc": "unlock",
+            "pubFuncArgs": ["SigHashPreimage()", "b'd0070000000000001976a9140f68389668c7e680d62e2446866ea1ca668e7fa188ac'"],
+            "txContext": {
+                "hex": "010000000152fdfc072182654f163f5f0f9a621d729566c74d10037c4d7bbb0407d1e2c6490100000000ffffffff01d0070000000000001976a9140f68389668c7e680d62e2446866ea1ca668e7fa188ac00000000",
+                "inputIndex": 0,
+                "inputSatoshis": 10000
+            }
+        }
+    ]
+}
