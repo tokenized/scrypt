@@ -1,11 +1,16 @@
 
-contract EnforceOutput {
-    bytes requiredScript;
+// EnforceContractBitcoinTransfer ensures when bitcoin is included in a Tokenized T1 Transfer 
+// request containing an atomic swap of bitcoin for tokens that it is not in custody of the 
+// Smart Contract Agent.
+contract EnforceContractBitcoinTransfer {
+    bytes payScript;
+    bytes refundScript;
     int requiredValue;
 
     // constructor
-    constructor(bytes script, int value) {
-        this.requiredScript = script;
+    constructor(bytes payScript, bytes refundScript, int value) {
+        this.payScript = payScript;
+        this.refundScript = refundScript;
         this.requiredValue = value;
     }
 
@@ -45,7 +50,7 @@ contract EnforceOutput {
         }
 
         int scriptSize = unpack(scriptLenBytes);
-        require(outputsBytes[offset:offset+scriptSize] == this.requiredScript);
+        require(outputsBytes[offset:offset+scriptSize] == this.payScript || outputsBytes[offset:offset+scriptSize] == this.refundScript);
     }
 
     static function enforceFirstOutput(bytes outputsBytes, int requiredValue, bytes requiredScript): bool {

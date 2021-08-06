@@ -1,0 +1,27 @@
+
+// EnforceOutputsHash requires the outputs hash of the spending transaction to match a specified value.
+contract EnforceOutputsHash {
+    bytes requiredOutputsHash; // Serialized output
+
+    // constructor
+    constructor(bytes outputsHash) {
+        this.requiredOutputsHash = outputsHash;
+    }
+
+    /*
+    * unlock
+    * preimage is the sig hash preimage for the current input and transaction.
+    */
+    public function unlock(SigHashPreimage preimage) {
+        // Verify preimage is correct.
+        require(Tx.checkPreimageOpt(preimage));
+
+        // Verify the hash of outputs matches the preimage.
+        require(this.requiredOutputsHash == hashOutputs(preimage));
+    }
+
+    static function hashOutputs(SigHashPreimage preimage) : bytes {
+        int l = len(preimage);
+        return preimage[l - 40 : l - 8];
+    }
+}
