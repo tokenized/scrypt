@@ -1,3 +1,4 @@
+import "./utils.scrypt";
 
 // EnforceAgentBitcoinTransfer ensures when bitcoin is included in an agent request containing an 
 // atomic swap of bitcoin for tokens that it is not in custody of the agent.
@@ -29,14 +30,14 @@ contract EnforceAgentBitcoinTransfer {
     * only the one corresponding output that is hashed in this script.
     */
     public function approve(Sig sig, PubKey pubKey, SigHashPreimage preimage) {
-        // Verify agent key.
+        // Verify correct public key.
         require(hash160(pubKey) == this.agentKeyHash);
 
         // Verify valid signature.
         require(checkSig(sig, pubKey));
 
         // Verify output hash is correct for approval.
-        require(this.approveOutputHash == getOutputsHash(preimage));
+        require(this.approveOutputHash == Utils.getOutputsHash(preimage));
 
         // Verify preimage is correct.
         require(Tx.checkPreimageOpt(preimage));
@@ -57,7 +58,7 @@ contract EnforceAgentBitcoinTransfer {
         require(checkSig(sig, pubKey));
 
         // Verify output hash is correct for refund.
-        require(this.refundOutputHash == getOutputsHash(preimage));
+        require(this.refundOutputHash == Utils.getOutputsHash(preimage));
 
         // Verify preimage is correct.
         require(Tx.checkPreimageOpt(preimage));
@@ -79,50 +80,26 @@ contract EnforceAgentBitcoinTransfer {
         require(checkSig(sig, pubKey));
 
         // Verify lock time.
-        require(getLockTime(preimage) >= this.expiration);
+        require(this.expiration <= Utils.getLockTime(preimage));
 
         // Verify sequence hash matches preimage.
-        require(hash256(sequences) == getSequencesHash(preimage));
+        require(hash256(sequences) == Utils.getSequencesHash(preimage));
 
         // Verify at least one sequence is not MAX so the lock time is actually applied.
         bool allMax = true;
-        int offset = 0;
         const bytes max = b'ffffffff';
-        loop (5) {
-            if (offset < len(sequences) && sequences[offset:offset+4] != max) {
+        loop (5) : i {
+            if (i*4 < len(sequences) && sequences[i*4:i*4+4] != max) {
                 allMax = false;
             }
-            offset+=4;
         }
         require(!allMax);
 
         // Verify sig hash type is SIG_HASH_ALL or else sequence hash will have been zeroed out
         // in the preimage and the check above would not actually be checking anything.
-        require(0x41 == getSigHashType(preimage));
+        require(SigHashType(b'41000000') == Utils.getSigHashType(preimage));
 
         // Verify preimage is correct.
         require(Tx.checkPreimageOpt(preimage));
-    }
-
-    // getSequencesHash parses the hash of the input's sequences from the preimage.
-    static function getSequencesHash(SigHashPreimage preimage) : bytes {
-        return preimage[36 : 68];
-    }
-
-    // getLockTime parses the lock time from the preimage data.
-    static function getLockTime(SigHashPreimage preimage) : int {
-        int l = len(preimage);
-        return unpack(preimage[l - 8 : l - 4]);
-    }
-
-    // getOutputsHash parses the hash of the outputs from the preimage.
-    static function getOutputsHash(SigHashPreimage preimage) : bytes {
-        int l = len(preimage);
-        return preimage[l - 40 : l - 8];
-    }
-
-    static function getSigHashType(SigHashPreimage preimage) : int {
-        int l = len(preimage);
-        return unpack(preimage[l - 4 : l]);
     }
 }

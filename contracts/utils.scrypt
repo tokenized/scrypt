@@ -1,0 +1,33 @@
+library Utils {
+    // getSequencesHash parses the hash of the input's sequences from the preimage.
+    static function getSequencesHash(SigHashPreimage preimage) : bytes {
+        return preimage[36 : 68];
+    }
+
+    // getLockTime parses the lock time from the preimage data.
+    static function getLockTime(SigHashPreimage preimage) : int {
+        int l = len(preimage);
+        return unpack(preimage[l - 8 : l - 4]);
+    }
+
+    // getOutputsHash parses the hash of the outputs from the preimage.
+    static function getOutputsHash(SigHashPreimage preimage) : bytes {
+        int l = len(preimage);
+        return preimage[l - 40 : l - 8];
+    }
+
+    static function getSigHashType(SigHashPreimage preimage) : SigHashType {
+        int l = len(preimage);
+        return SigHashType(preimage[l - 4 : l]);
+    }
+
+    static function VerifyPublicKeyHash(Ripemd160 publicKeyHash, Sig sig, PubKey pubKey): bool {
+        // Verify correct public key.
+        require(hash160(pubKey) == publicKeyHash);
+
+        // Verify valid signature.
+        require(checkSig(sig, pubKey));
+
+        return true;
+    }
+}
