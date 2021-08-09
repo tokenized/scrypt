@@ -17,10 +17,10 @@ contract EnforceOutputsHash {
         require(Tx.checkPreimageOpt(preimage));
 
         // Verify the hash of outputs matches the preimage.
-        require(this.requiredOutputsHash == hashOutputs(preimage));
+        require(this.requiredOutputsHash == getOutputsHash(preimage));
     }
 
-    static function hashOutputs(SigHashPreimage preimage) : bytes {
+    static function getOutputsHash(SigHashPreimage preimage) : bytes {
         int l = len(preimage);
         return preimage[l - 40 : l - 8];
     }

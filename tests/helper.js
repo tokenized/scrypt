@@ -1,6 +1,8 @@
 
-const { toHex, buildContractClass, compileContract: compileContractImpl } = require('scryptlib');
+const { bsv, toHex, buildContractClass, compileContract: compileContractImpl, getPreimage } = require('scryptlib');
 const path = require('path')
+
+const MSB_THRESHOLD = 0x7e;
 
 function getOutputsHex(tx, n) {
     let writer;
@@ -36,4 +38,27 @@ function buildContract(fileName, options) {
     return buildContractClass(result);
 }
 
-module.exports = { getOutputsHex, buildContract };
+// fixLowS increments the first input's sequence number until the sig hash is safe for low s.
+function fixLowS(tx, lockingScript, inputSatoshis, inputIndex) {
+  for (i=0;i<25;i++) {
+    const preimage = getPreimage(tx, lockingScript, inputSatoshis, inputIndex);
+    const sighash = bsv.crypto.Hash.sha256sha256(Buffer.from(toHex(preimage), 'hex'));
+    console.log("fix sighash : " + sighash.toString('hex'));
+    const msb = sighash.readUInt8();
+    if (msb < MSB_THRESHOLD) {
+      return;
+    }
+    tx.inputs[0].sequenceNumber++;
+  }
+}
+
+// checkLowS returns true if the sig hash is safe for low s.
+function checkLowS(tx, lockingScript, inputSatoshis, inputIndex) {
+  const preimage = getPreimage(tx, lockingScript, inputSatoshis, inputIndex);
+  const sighash = bsv.crypto.Hash.sha256sha256(Buffer.from(toHex(preimage), 'hex'));
+  console.log("check sighash : " + sighash.toString('hex'));
+  const msb = sighash.readUInt8();
+  return (msb < MSB_THRESHOLD);
+}
+
+module.exports = { getOutputsHex, buildContract, fixLowS, checkLowS };
