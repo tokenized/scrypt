@@ -13,15 +13,6 @@ contract EnforceAgentBitcoinTransfer {
     Ripemd160 expirationKeyHash; // Hash of public key for expiration spend if time lock expire. 
     int expiration; // Block height after which the expiration key can reclaim bitcoin.
 
-    // constructor
-    constructor(Ripemd160 agentKeyHash, Sha256 approveOutputHash, Sha256 refundOutputHash, Ripemd160 expirationKeyHash, int expiration) {
-        this.agentKeyHash = agentKeyHash;
-        this.approveOutputHash = approveOutputHash;
-        this.refundOutputHash = refundOutputHash;
-        this.expirationKeyHash = expirationKeyHash;
-        this.expiration = expiration;
-    }
-
     /*
     * approve approves the bitcoin transfer.
     * preimage is the sig hash preimage for the current input and transaction.
@@ -95,9 +86,9 @@ contract EnforceAgentBitcoinTransfer {
         }
         require(!allMax);
 
-        // Verify sig hash type is SIG_HASH_ALL or else sequence hash will have been zeroed out
+        // Verify sig hash type is SIGHASH_ALL or else sequence hash will have been zeroed out
         // in the preimage and the check above would not actually be checking anything.
-        require(SigHashType(b'41000000') == Utils.getSigHashType(preimage));
+        require((SigHash.ALL | SigHash.FORKID) == Utils.getSigHashType(preimage));
 
         // Verify preimage is correct.
         require(Tx.checkPreimageOpt(preimage));

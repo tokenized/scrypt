@@ -1,7 +1,7 @@
 library Utils {
     // getSequencesHash parses the hash of the input's sequences from the preimage.
-    static function getSequencesHash(SigHashPreimage preimage) : bytes {
-        return preimage[36 : 68];
+    static function getSequencesHash(SigHashPreimage preimage) : Sha256 {
+        return Sha256(preimage[36 : 68]);
     }
 
     // getLockTime parses the lock time from the preimage data.
@@ -11,14 +11,14 @@ library Utils {
     }
 
     // getOutputsHash parses the hash of the outputs from the preimage.
-    static function getOutputsHash(SigHashPreimage preimage) : bytes {
+    static function getOutputsHash(SigHashPreimage preimage) : Sha256 {
         int l = len(preimage);
-        return preimage[l - 40 : l - 8];
+        return Sha256(preimage[l - 40 : l - 8]);
     }
 
     static function getSigHashType(SigHashPreimage preimage) : SigHashType {
         int l = len(preimage);
-        return SigHashType(preimage[l - 4 : l]);
+        return SigHashType(preimage[l - 4 : l - 3]);
     }
 
     static function VerifyPublicKeyHash(Ripemd160 publicKeyHash, Sig sig, PubKey pubKey): bool {
