@@ -10,6 +10,12 @@ library Utils {
         return unpack(preimage[l - 8 : l - 4]);
     }
 
+    // getSequence parses the input's sequence from the preimage data.
+    static function getSequence(SigHashPreimage preimage) : bytes {
+        int l = len(preimage);
+        return preimage[l - 44 : l - 40];
+    }
+
     // getOutputsHash parses the hash of the outputs from the preimage.
     static function getOutputsHash(SigHashPreimage preimage) : Sha256 {
         int l = len(preimage);
