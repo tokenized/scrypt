@@ -31,7 +31,7 @@ contract EnforceAgentBitcoinTransfer {
         require(this.approveOutputHash == Utils.getOutputsHash(preimage));
 
         // Verify preimage is correct.
-        require(Tx.checkPreimageOpt(preimage));
+        require(Tx.checkPreimageOpt_(preimage));
     }
 
     /*
@@ -52,7 +52,7 @@ contract EnforceAgentBitcoinTransfer {
         require(this.refundOutputHash == Utils.getOutputsHash(preimage));
 
         // Verify preimage is correct.
-        require(Tx.checkPreimageOpt(preimage));
+        require(Tx.checkPreimageOpt_(preimage));
     }
 
     /*
@@ -71,10 +71,6 @@ contract EnforceAgentBitcoinTransfer {
 
         // Verify input's sequence from the preimage is not MAX to confirm the lock time is actually applied.
         require(b'ffffffff' != Utils.getSequence(preimage));
-
-        // Verify sig hash type is SIGHASH_ALL or else sequence hash will have been zeroed out
-        // in the preimage and the check above would not actually be checking anything.
-        require((SigHash.ALL | SigHash.FORKID) == Utils.getSigHashType(preimage));
 
         // Verify preimage is correct.
         require(Tx.checkPreimageOpt(preimage));

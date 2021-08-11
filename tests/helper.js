@@ -39,9 +39,9 @@ function buildContract(fileName, options) {
 }
 
 // fixLowS increments the first input's sequence number until the sig hash is safe for low s.
-function fixLowS(tx, lockingScript, inputSatoshis, inputIndex) {
+function fixLowS(tx, lockingScript, inputSatoshis, inputIndex, sigHashType = 0x41) {
   for (i=0;i<25;i++) {
-    const preimage = getPreimage(tx, lockingScript, inputSatoshis, inputIndex);
+    const preimage = getPreimage(tx, lockingScript, inputSatoshis, inputIndex, sigHashType);
     const sighash = bsv.crypto.Hash.sha256sha256(Buffer.from(toHex(preimage), 'hex'));
     console.log("fix sighash : " + sighash.toString('hex'));
     const msb = sighash.readUInt8();
@@ -53,8 +53,8 @@ function fixLowS(tx, lockingScript, inputSatoshis, inputIndex) {
 }
 
 // checkLowS returns true if the sig hash is safe for low s.
-function checkLowS(tx, lockingScript, inputSatoshis, inputIndex) {
-  const preimage = getPreimage(tx, lockingScript, inputSatoshis, inputIndex);
+function checkLowS(tx, lockingScript, inputSatoshis, inputIndex, sigHashType = 0x41) {
+  const preimage = getPreimage(tx, lockingScript, inputSatoshis, inputIndex, sigHashType);
   const sighash = bsv.crypto.Hash.sha256sha256(Buffer.from(toHex(preimage), 'hex'));
   console.log("check sighash : " + sighash.toString('hex'));
   const msb = sighash.readUInt8();
