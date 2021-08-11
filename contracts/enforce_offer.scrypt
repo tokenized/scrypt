@@ -1,0 +1,80 @@
+import "./utils.scrypt";
+
+contract EnforceOffer {
+    Ripemd160 keyHash; // Hash of public key.
+    Sha256 firstOutputHash; // Hash of required output 1.
+    Sha256 secondOutputHash; // Hash of required output 2.
+
+    public function unlock(Sig sig, PubKey pubKey, SigHashPreimage preimage, bytes outputBytes) {
+        // Verify correct public key.
+        require(hash160(pubKey) == this.keyHash);
+
+        // Verify valid signature.
+        require(checkSig(sig, pubKey));
+
+        // Verify output bytes match preimage
+        require(hash256(outputBytes) == Utils.getOutputsHash(preimage));
+
+        // Verify preimage is correct.
+        require(Tx.checkPreimageOpt(preimage));
+
+        // Parse out first output
+        int start = 0;
+        int offset = 8; // skip Value
+
+        // Get variable length of output script
+        bytes lengthBytes = readVarInt(outputBytes[offset:]);
+        int length = unpackUnsigned(lengthBytes);
+        int bytesLength = len(lengthBytes);
+        if (bytesLength > 1) {
+            offset++; // Add variable integer size byte
+        }
+        offset += length; // Add script length
+
+        // Check that first output 
+        require(hash256(outputBytes[start:offset]) == this.firstOutputHash);
+
+        start = offset;
+        offset = start + 8; // skip Value
+
+        // Get variable length of output script
+        lengthBytes = readVarInt(outputBytes[offset:]);
+        length = unpackUnsigned(lengthBytes);
+        bytesLength = len(lengthBytes);
+        if (bytesLength > 1) {
+            offset++; // Add variable integer size byte
+        }
+        offset += length; // Add script length
+
+        // Check that first output 
+        require(hash256(outputBytes[start:offset]) == this.secondOutputHash);
+    }
+
+    // read a VarInt field from the beginning of 'b'
+    static function readVarInt(bytes b) : bytes {
+        int l = 0;
+        bytes ret = b'';
+        bytes header = b[0:1];
+
+        if (header == b'fd') {
+            ret = b[1:3];
+        }
+        else if (header == b'fe') {
+            ret = b[1:5];
+        }
+        else if (header == b'ff') {
+            ret = b[1:9];
+        }
+        else {
+            ret = b[:1];
+        }
+
+        return ret;
+    }
+
+    // unpackUnsigned converts bytes to unsigned integer
+    static function unpackUnsigned(bytes b) : int {
+        // append positive sign byte. Util does not hurt even when sign bit is already positive
+        return unpack(b + b'00');
+    }
+}
