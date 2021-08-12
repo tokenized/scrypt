@@ -1,11 +1,24 @@
 import "./utils.scrypt";
 
+/* EnforceOffer enables the sender to provide one input with a signed output and an output that is
+ * required by this locking script.
+ *
+ * The sender creates a transaction with one input and two outputs.
+ *
+ * They sign the input with a SIGHASH_SINGLE | SIGHASH_ANYONECANPAY which means they are only
+ * signing the one input and first output. This allows another party to add inputs and outputs
+ * without invalidating their signature.
+ *
+ * This requires the sender to prepare the T1 output and estimate needed bitcoin funding, then
+ * create a tx with an output with this locking script with the token sender's key hash and the 
+ * hash of the T1 output.
+ *
+ */
 contract EnforceOffer {
     Ripemd160 keyHash; // Hash of public key.
-    Sha256 firstOutputHash; // Hash of required output 1.
     Sha256 secondOutputHash; // Hash of required output 2.
 
-    public function unlock(Sig sig, PubKey pubKey, SigHashPreimage preimage, bytes outputBytes) {
+    public function unlock(Sig sig, PubKey pubKey, bytes outputBytes, SigHashPreimage preimage) {
         // Verify correct public key.
         require(hash160(pubKey) == this.keyHash);
 
@@ -18,7 +31,7 @@ contract EnforceOffer {
         // Verify preimage is correct.
         require(Tx.checkPreimageOpt(preimage));
 
-        // Parse out first output
+        // Parse past first output
         int start = 0;
         int offset = 8; // skip Value
 
@@ -26,14 +39,15 @@ contract EnforceOffer {
         bytes lengthBytes = readVarInt(outputBytes[offset:]);
         int length = unpackUnsigned(lengthBytes);
         int bytesLength = len(lengthBytes);
+        offset += bytesLength;
         if (bytesLength > 1) {
             offset++; // Add variable integer size byte
         }
         offset += length; // Add script length
 
-        // Check that first output 
-        require(hash256(outputBytes[start:offset]) == this.firstOutputHash);
+        // Don't need to verify this output as it is signed by the above signature.
 
+        // Parse second output to check hash.
         start = offset;
         offset = start + 8; // skip Value
 
@@ -41,6 +55,7 @@ contract EnforceOffer {
         lengthBytes = readVarInt(outputBytes[offset:]);
         length = unpackUnsigned(lengthBytes);
         bytesLength = len(lengthBytes);
+        offset += bytesLength;
         if (bytesLength > 1) {
             offset++; // Add variable integer size byte
         }

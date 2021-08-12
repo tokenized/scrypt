@@ -3,24 +3,6 @@ const { bsv, toHex, buildContractClass, compileContract: compileContractImpl, ge
 const path = require('path')
 
 const MSB_THRESHOLD = 0x7e;
-
-function getOutputsHex(tx, n) {
-    let writer;
-  
-    if(!n) {
-      for(let output of tx.outputs) {
-        if(writer) {
-          output.toBufferWriter(writer);
-        } else {
-          writer = output.toBufferWriter();
-        }
-      }
-    } else {
-      writer = tx.outputs[n].toBufferWriter();
-    }
-  
-    return toHex(writer.toBuffer());
-}
   
 function buildContract(fileName, options) {
     const basePath = "/" + path.join(...__dirname.split("/").slice(0, -1));
@@ -61,4 +43,22 @@ function checkLowS(tx, lockingScript, inputSatoshis, inputIndex, sigHashType = 0
   return (msb < MSB_THRESHOLD);
 }
 
-module.exports = { getOutputsHex, buildContract, fixLowS, checkLowS };
+function getOutputsHex(tx, n) {
+    let writer;
+  
+    if(!n) {
+      for(let output of tx.outputs) {
+        if(writer) {
+          output.toBufferWriter(writer);
+        } else {
+          writer = output.toBufferWriter();
+        }
+      }
+    } else {
+      writer = tx.outputs[n].toBufferWriter();
+    }
+  
+    return toHex(writer.toBuffer());
+}
+
+module.exports = { buildContract, fixLowS, checkLowS, getOutputsHex };
